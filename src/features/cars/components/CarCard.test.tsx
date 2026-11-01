@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { CarCard } from "@/features/cars/components/CarCard";
 import type { Car } from "@/features/cars/types/car";
 
@@ -15,7 +16,11 @@ const car: Car = {
 
 describe("CarCard", () => {
   it("shows vehicle details and provides an image for each breakpoint", () => {
-    const { container } = render(<CarCard car={car} />);
+    const { container } = render(
+      <MemoryRouter>
+        <CarCard car={car} />
+      </MemoryRouter>
+    );
 
     expect(
       screen.getByRole("heading", { name: "Q5", level: 2 })
