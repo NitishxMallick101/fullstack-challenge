@@ -41,6 +41,39 @@ describe("CarsPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("waits for the user to pause typing before requesting filtered results", async () => {
+    let requestCount = 0;
+    server.use(
+      graphql.query("GetCars", ({ variables }) => {
+        requestCount += 1;
+        const model = String(variables.model ?? "").toLowerCase();
+        return HttpResponse.json({
+          data: {
+            cars: db
+              .list()
+              .filter((car) => car.model.toLowerCase().includes(model)),
+          },
+        });
+      })
+    );
+
+    renderWithProviders(<CarsPage />);
+    expect(await screen.findByText("6 vehicles available")).toBeInTheDocument();
+    expect(requestCount).toBe(1);
+
+    await userEvent.type(
+      screen.getByRole("textbox", { name: "Search model" }),
+      "Q5"
+    );
+    expect(requestCount).toBe(1);
+
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(requestCount).toBe(1);
+
+    expect(await screen.findByText("1 vehicle available")).toBeInTheDocument();
+    expect(requestCount).toBe(2);
+  });
+
   it("shows a useful message when the inventory request fails", async () => {
     server.use(
       graphql.query("GetCars", () =>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Box,
@@ -14,9 +14,22 @@ import { CarCard } from "@/features/cars/components/CarCard";
 import { CarForm } from "@/features/cars/components/CarForm";
 import { useCars } from "@/features/cars/hooks/useCars";
 
+const SEARCH_DEBOUNCE_MS = 300;
+
 export function CarsPage() {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [sortOrder, setSortOrder] = useState("newest");
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(
+      () => setDebouncedSearch(search),
+      SEARCH_DEBOUNCE_MS
+    );
+
+    return () => window.clearTimeout(timeoutId);
+  }, [search]);
+
   const {
     cars,
     loading,
@@ -25,7 +38,7 @@ export function CarsPage() {
     createCar,
     creating,
     createError,
-  } = useCars(search);
+  } = useCars(debouncedSearch);
 
   const sortedCars = useMemo(
     () =>
